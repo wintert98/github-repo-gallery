@@ -1,6 +1,9 @@
 const overview = document.querySelector(".overview");
-const repoList = document.querySelector(".repo-list")
+const repoList = document.querySelector(".repo-list");
+const repos = document.querySelector(".repos");
+const repoData = document.querySelector(".repo-data")
 const username = "wintert98";
+
 /*-------- Async function to call API and get user data  -----------*/
 const githubProfile = async function () {
     const res = await fetch(`https://api.github.com/users/${username}`);
@@ -27,14 +30,15 @@ const displayUser = function (data) {
  overview.append(div);
 };
 
-/*-------- Async function to call API and get repo data  -----------*/
+/*-------- Async function to call API and get repo list data  -----------*/
 const githubRepo = async function () {
     const res = await fetch(`https://api.github.com/users/${username}/repos`);
     const data = await res.json();
+    //console.log(data);
     displayRepo(data);
 };
 githubRepo();
-/*--------  Function to display repo data  -----------*/
+/*--------  Function to display repo list data  -----------*/
 const displayRepo = function (data) {
 
     for(let i = 0; i < data.length; i++) {
@@ -45,4 +49,46 @@ const displayRepo = function (data) {
 
     }
 
+};
+
+/*--------  Event listener on repo list data  -----------*/
+repoList.addEventListener("click", function (e) {
+    if (e.target.matches("h3")) {
+        const repoName = e.target.innerText
+        githubRepoInfo(repoName);
+    }
+});
+
+/*-------- Async function to call API and get repo info and language data  -----------*/
+const githubRepoInfo = async function (repoName) {
+    const res = await fetch(`https://api.github.com/repos/${username}/${repoName}`);
+    const repoInfo = await res.json();
+    const fetchLanguages = await fetch(repoInfo.languages_url)
+    const languageData = await fetchLanguages.json();
+    let languages = [];
+    for (let key in languageData) {
+        languages.push(key);
+      }
+      console.log(repoInfo);
+    console.log(languages);  
+    displayRepoInfo(repoInfo, languages);
+};
+
+/*--------  Function to display repo info and language data  -----------*/
+const displayRepoInfo = function (repoInfo, languages) {
+    repoData.innerHTML = "";
+    const div = document.createElement("div");
+    div.classList.add("repo-data");
+    repoData.classList.remove("hide")
+    repos.classList.add("hide");
+    div.innerHTML = `
+    <div>
+      <h3>Name: ${repoInfo.name}</h3>
+        <p>Description: ${repoInfo.description}</p>
+        <p>Default Branch: ${repoInfo.default_branch}</p>
+        <p>Languages: ${languages.join(", ")}</p>
+        <a class="visit" href="${repoInfo.html_url}" target="_blank" rel="noreferrer noopener">View Repo on GitHub!</a>
+    </div>
+    ` 
+    repoData.append(div);
 };
